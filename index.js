@@ -156,6 +156,21 @@ async function run() {
         res.status(500).send({ message: 'Internal Server Error' });
       }
     });
+    // get all product
+    app.get('/products', async (req, res) => {
+      try {
+        const products = await productCollection.find({}).toArray(); // Fetch all products
+        if (products.length > 0) {
+          res.send(products);
+        } else {
+          res.status(404).json({ message: 'No products found' });
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+      }
+    });
+    
     
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
