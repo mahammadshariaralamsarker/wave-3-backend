@@ -1,28 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ObjectId, ServerApiVersion } = require('mongodb');
-const dotenv = require('dotenv');
-
-// Initialize dotenv for environment variables
-dotenv.config();
+require('dotenv').config()
 
 const app = express();
 const port = process.env.PORT || 5000;
 
+
 // Middleware
 app.use(cors({
   origin: [
-    'http://localhost:5173', 
-    'https://seba-corner2.web.app', 
-    'https://seba-corner2.firebaseapp.com', 
-    'https://seba-corner.web.app'
-  ]
-}));
-app.use(express.json()); // To parse incoming JSON requests
+    'http://localhost:5173',
 
-// MongoDB URI and Client Setup
-// const uri = 'mongodb://localhost:27017';
-const uri = "mongodb+srv://wave3:S6BNTPYoNpuc6yIA@cluster0.mh62rbj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  ],
+  optionsSuccessStatus: 200
+}));
+app.use(express.json()); 
+
+const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@cluster0.mh62rbj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -31,17 +26,14 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+const db = client.db('Ecommerce');
+const usersCollection = db.collection('users');
+const productCollection = db.collection('product');
 async function run() {
   try {
     await client.connect();
-    const db = client.db('Ecommerce');  // Your database name
-    const usersCollection = db.collection('users');  // Users collection
-    const productCollection = db.collection('product');  // Users collection
-
-    // Welcome message route
-    app.get('/', (req, res) => {
-      res.send('Coffee maker server is running');
-    });
+    
 
     // POST - Add a new user
     app.post('/users', async (req, res) => {
@@ -55,7 +47,6 @@ async function run() {
       try {
         const email = req.params.email;
         const user = await usersCollection.findOne({ email: email });
-
         if (user) {
           res.send(user);
         } else {
@@ -145,7 +136,7 @@ async function run() {
       try {
         const { id } = req.params;
         const result = await productCollection.deleteOne({ _id: new ObjectId(id) });
-    
+
         if (result.deletedCount > 0) {
           res.status(200).send({ message: 'Product deleted successfully' });
         } else {
@@ -170,15 +161,17 @@ async function run() {
         res.status(500).json({ message: 'Internal Server Error' });
       }
     });
-    
-    
+
+
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
   }
 }
 
 run();
-
+app.get('/', (req, res) => {
+  res.send('Coffee maker server is running');
+});
 // Start the server
 app.listen(port, () => {
   console.log(`Ecommerce app running on port ${port}`);
